@@ -24,6 +24,8 @@ Este repositorio es una demostración con datos ficticios. No está habilitado p
 - Gestión de consentimiento/base legal, plazos de conservación y ejercicio de derechos.
 - Copias de seguridad probadas, plan de continuidad y respuesta a incidentes.
 - Evaluación del proveedor, ubicación de datos y transferencias internacionales.
+- Almacenamiento privado de adjuntos, URLs firmadas de corta duración, validación por contenido, antivirus, cuarentena y bloqueo de ejecución.
+- Límites de tamaño y tipo tanto en cliente como en servidor; nunca confiar únicamente en la extensión del archivo.
 - Pruebas de seguridad, dependencias, secretos y revisión profesional previa al lanzamiento.
 
 ## Reporte de vulnerabilidades
