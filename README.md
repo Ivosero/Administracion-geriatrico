@@ -4,6 +4,10 @@ Demo navegable de un centro operativo y una historia clínica electrónica para 
 
 La HCE de demostración permite adjuntar PDF, imágenes, videos, documentos Word, planillas Excel, CSV y texto. Medicina y Enfermería pueden cargar medicación, y cada integrante de Enfermería puede registrar su turno y horario desde el encabezado.
 
+### Mi ronda de medicación
+
+Al ingresar con Enfermería, la sección Medicación abre por defecto **Mi ronda**: muestra únicamente residentes asignados, orden de recorrido, habitación, horario, medicamento, dosis, presentación, vía e indicaciones especiales. Permite registrar en un toque `Administrada` o seleccionar `Rechazada`, `Ausente`, `Omitida por indicación médica` y `No disponible`, conservando usuario y hora. Medicina y coordinación pueden acceder a la vista general.
+
 > **Importante:** todos los nombres y datos son ficticios. Esta versión es una muestra y no debe utilizarse con información clínica real.
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FIvosero%2FAdministracion-geriatrico)
