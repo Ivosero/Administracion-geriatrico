@@ -14,3 +14,16 @@ CREATE TABLE IF NOT EXISTS staff_shifts (id uuid PRIMARY KEY DEFAULT gen_random_
 CREATE TABLE IF NOT EXISTS nurse_resident_assignments (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), nurse_id uuid NOT NULL REFERENCES users(id), resident_id uuid NOT NULL REFERENCES residents(id), shift_name text NOT NULL, valid_from date DEFAULT current_date, valid_until date, assigned_by uuid REFERENCES users(id), active boolean DEFAULT true, created_at timestamptz DEFAULT now(), UNIQUE(nurse_id,resident_id,shift_name,valid_from));
 INSERT INTO users(name,email,role) VALUES ('Valeria Méndez','admin@serena.demo','administrador'),('Dra. Julia Ferrer','medico@serena.demo','medicina'),('Marina López','enfermeria@serena.demo','enfermeria'),('Carlos Benítez','administrativo@serena.demo','administrador') ON CONFLICT DO NOTHING;
 INSERT INTO residents(first_name,last_name,dni,room,blood_group,allergies,diabetic,bath_schedule) VALUES ('Elena','Rossi','14403911','12A','A+','Penicilina',true,'Mar y Vie · mañana'),('Manuel','Pereyra','12920487','08B','O+','Sin alergias',false,'Lun y Jue · mañana'),('Ofelia','Suárez','15112880','15A','B-','Látex',false,'Mié y Sáb · tarde'),('Raúl','Domínguez','13776420','06A','A-','Sin alergias',true,'Mar y Vie · tarde') ON CONFLICT DO NOTHING;
+
+-- Ubicación asistencial y firma biométrica (WebAuthn)
+ALTER TABLE residents ADD COLUMN IF NOT EXISTS floor smallint CHECK (floor between 1 and 5);
+ALTER TABLE residents ADD COLUMN IF NOT EXISTS bed text;
+ALTER TABLE staff_shifts ADD COLUMN IF NOT EXISTS floor smallint CHECK (floor between 1 and 5);
+CREATE TABLE IF NOT EXISTS webauthn_challenges (email text NOT NULL,purpose text NOT NULL,challenge text NOT NULL,expires_at timestamptz NOT NULL,PRIMARY KEY(email,purpose));
+CREATE TABLE IF NOT EXISTS passkey_credentials (id uuid PRIMARY KEY DEFAULT gen_random_uuid(),user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,credential_id text UNIQUE NOT NULL,public_key bytea NOT NULL,counter bigint NOT NULL DEFAULT 0,transports text[] DEFAULT '{}',device_type text,backed_up boolean DEFAULT false,professional_name text NOT NULL,license text NOT NULL,created_at timestamptz DEFAULT now(),last_used_at timestamptz);
+ALTER TABLE clinical_notes ADD COLUMN IF NOT EXISTS signature_credential_id uuid REFERENCES passkey_credentials(id);
+ALTER TABLE clinical_notes ADD COLUMN IF NOT EXISTS signature_verified_at timestamptz;
+ALTER TABLE clinical_notes ADD COLUMN IF NOT EXISTS signature_snapshot jsonb;
+CREATE INDEX IF NOT EXISTS idx_passkey_user ON passkey_credentials(user_id);
+CREATE INDEX IF NOT EXISTS idx_alerts_role_unresolved ON alerts(target_role) WHERE resolved_at IS NULL;
+UPDATE residents SET floor=CASE room WHEN '12A' THEN 2 WHEN '15A' THEN 3 ELSE 1 END,bed=right(room,1),room=left(room,length(room)-1) WHERE floor IS NULL AND room ~ '^[0-9]+[A-Za-z]$';
