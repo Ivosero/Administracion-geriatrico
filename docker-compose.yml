@@ -1,27 +1,56 @@
 services:
   db:
     image: postgres:16-alpine
+    restart: unless-stopped
     environment:
-      POSTGRES_DB: serena
-      POSTGRES_USER: serena
-      POSTGRES_PASSWORD: serena
+      POSTGRES_DB: ${POSTGRES_DB:-serena}
+      POSTGRES_USER: ${POSTGRES_USER:-serena}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./database/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U serena"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-serena} -d ${POSTGRES_DB:-serena}"]
       interval: 5s
       timeout: 5s
-      retries: 10
+      retries: 12
   app:
     build: .
+    restart: unless-stopped
     environment:
-      DATABASE_URL: postgres://serena:serena@db:5432/serena
+      DATABASE_URL: postgres://${POSTGRES_USER:-serena}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-serena}
       PORT: 3001
-    ports:
-      - "3001:3001"
+      NODE_ENV: production
+      WEBAUTHN_RP_ID: ${DOMAIN}
+      WEBAUTHN_ORIGIN: https://${DOMAIN}
+      CBOR_NATIVE_ACCELERATION_DISABLED: "true"
+    expose:
+      - "3001"
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3001/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMAIN: ${DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      app:
+        condition: service_healthy
 volumes:
   postgres-data:
+  caddy-data:
+  caddy-config:
