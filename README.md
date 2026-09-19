@@ -75,3 +75,18 @@ npm run dev
 npm run build
 npm start
 ```
+
+
+## Despliegue en VPS Hostinger con Docker
+
+Requisitos: dominio apuntado a la IP del VPS, puertos 80/443 abiertos, Docker y Docker Compose.
+
+1. Copiar el repositorio al VPS.
+2. Ejecutar `cp .env.example .env`.
+3. Editar `.env`: definir `DOMAIN` y una `POSTGRES_PASSWORD` larga y única.
+4. Ejecutar `docker compose up -d --build`.
+5. Verificar con `docker compose ps` y `docker compose logs -f app caddy`.
+
+Caddy obtiene y renueva HTTPS automáticamente. HTTPS es obligatorio para WebAuthn. La huella nunca llega a Serena: Windows Hello, Touch ID, Android o un lector FIDO2 validan al profesional; PostgreSQL conserva la clave pública, matrícula, nombre profesional, contador anti-repetición y auditoría.
+
+Para actualizar: `git pull && docker compose up -d --build`. Los datos permanecen en el volumen `postgres-data`. Realizar copias periódicas con `pg_dump`.
